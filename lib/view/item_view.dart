@@ -14,32 +14,38 @@ class ItemView extends StatelessWidget {
       ),
       body: Consumer<ItemController>(
         builder: (context, itemsController, child) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              itemsController.loading
-                  ? const CircularProgressIndicator()
-                  : Expanded(
-                      child: RefreshIndicator(
-                        onRefresh: () async {
-                          await itemsController.startBackgroundRefresh();
+          return itemsController.loading
+              ? const Center(child: CircularProgressIndicator())
+              : itemsController.items.isEmpty
+                  ? const Center(
+                      child: Text('List Empty'),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        await itemsController.startBackgroundRefresh();
+                      },
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemCount: itemsController.items.length,
+                        itemBuilder: (context, index) {
+                          final item = itemsController.items[index];
+                          return Card(
+                            child: ListTile(
+                              title: Text(
+                                item.name ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                item.fullName ?? '',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          );
                         },
-                        child: ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          itemCount: itemsController.items.length,
-                          itemBuilder: (context, index) {
-                            final item = itemsController.items[index];
-                            return ListTile(
-                              title: Text(item.name ?? ''),
-                              subtitle: Text(item.fullName ?? ''),
-                              // Add other item details as needed
-                            );
-                          },
-                        ),
                       ),
-                    ),
-            ],
-          );
+                    );
         },
       ),
     );

@@ -22,10 +22,12 @@ class ItemController extends ChangeNotifier {
   final ReceivePort _refreshReceivePort = ReceivePort();
 
   Future<void> startBackgroundRefresh() async {
+    showSnackbar(context, 'Refresh in Progress...!');
     _backgroundRefreshIsolate = await Isolate.spawn(
         _backgroundRefreshEntryPoint, _refreshReceivePort.sendPort);
     _refreshReceivePort.listen((message) async {
       if (message == 'REFRESH_COMPLETE') {
+        stopBackgroundRefresh();
         await loadItems(isRefresh: true);
       }
     });
@@ -64,7 +66,6 @@ class ItemController extends ChangeNotifier {
     } catch (e) {
       log('Error loading items from network: $e');
     } finally {
-      _loading = false;
       notifyListeners();
     }
   }
@@ -76,7 +77,7 @@ class ItemController extends ChangeNotifier {
       log('Error loading items from database: $e');
     } finally {
       // ignore: use_build_context_synchronously
-      isRefresh ? showRefreshSnackbar(context) : null;
+      isRefresh ? showSnackbar(context, 'Refresh complete!') : null;
       _loading = false;
       notifyListeners();
     }
@@ -91,11 +92,11 @@ class ItemController extends ChangeNotifier {
     }
   }
 
-  void showRefreshSnackbar(BuildContext context) {
+  void showSnackbar(BuildContext context, String text) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Refresh complete!'),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(text),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
